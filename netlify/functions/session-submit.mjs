@@ -1,6 +1,6 @@
-// session-submit.mjs
+// session-submit.mjs  — Netlify Function v1
 // POST /api/session-submit/:token
-// Reçoit les credentials depuis la page iPhone et les stocke pour l'Apple TV.
+// Reçoit les credentials depuis la page iPhone.
 
 import { getStore } from "@netlify/blobs";
 
@@ -10,69 +10,47 @@ const CORS = {
     "Content-Type":                 "application/json",
 };
 
-export default async (req, context) => {
-    if (req.method === "OPTIONS") {
-        return new Response(null, { status: 204, headers: CORS });
+export const handler = async (event) => {
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 204, headers: CORS, body: "" };
+    }
+    if (event.httpMethod !== "POST") {
+        return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: "method_not_allowed" }) };
     }
 
-    if (req.method !== "POST") {
-        return new Response(JSON.stringify({ error: "method_not_allowed" }), {
-            status: 405, headers: CORS,
-        });
-    }
-
-    const { token } = context.params;
+    const token = event.path.split("/").filter(Boolean).pop();
     if (!token) {
-        return new Response(JSON.stringify({ error: "missing_token" }), {
-            status: 400, headers: CORS,
-        });
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "missing_token" }) };
     }
 
     const store = getStore("sessions");
     const raw   = await store.get(token);
 
     if (!raw) {
-        return new Response(JSON.stringify({ error: "not_found" }), {
-            status: 404, headers: CORS,
-        });
+        return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "not_found" }) };
     }
 
     const session = JSON.parse(raw);
 
     if (Date.now() > session.expires_at) {
         await store.delete(token);
-        return new Response(JSON.stringify({ error: "expired" }), {
-            status: 410, headers: CORS,
-        });
+        return { statusCode: 410, headers: CORS, body: JSON.stringify({ error: "expired" }) };
     }
-
     if (session.status !== "pending") {
-        return new Response(JSON.stringify({ error: "already_submitted" }), {
-            status: 409, headers: CORS,
-        });
+        return { statusCode: 409, headers: CORS, body: JSON.stringify({ error: "already_submitted" }) };
     }
 
-    // Lecture et validation du body
     let credentials;
     try {
-        credentials = await req.json();
+        credentials = JSON.parse(event.body || "{}");
     } catch {
-        return new Response(JSON.stringify({ error: "invalid_json" }), {
-            status: 400, headers: CORS,
-        });
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "invalid_json" }) };
     }
 
-    const required = ["playlist_type", "playlist_name"];
-    for (const field of required) {
-        if (!credentials[field]) {
-            return new Response(
-                JSON.stringify({ error: "missing_field", field }),
-                { status: 400, headers: CORS }
-            );
-        }
+    if (!credentials.playlist_type || !credentials.playlist_name) {
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "missing_required_fields" }) };
     }
 
-    // Stockage
     await store.set(token, JSON.stringify({
         ...session,
         status:       "completed",
@@ -80,10 +58,5 @@ export default async (req, context) => {
         completed_at: Date.now(),
     }));
 
-    return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200, headers: CORS }
-    );
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ success: true }) };
 };
-
-export const config = { path: "/api/session-submit/:token" };

@@ -1,7 +1,6 @@
-// session-status.mjs
-// GET /api/session-status/:token
-// Retourne le statut de la session (polling Apple TV).
-// Une fois "completed", retourne les credentials et supprime la session.
+// session-status.mjs  — Netlify Function v1
+// GET /api/session-status/:token  (token extrait du path)
+// Polling Apple TV — retourne pending | completed + credentials.
 
 import { getStore } from "@netlify/blobs";
 
@@ -10,57 +9,45 @@ const CORS = {
     "Content-Type":                "application/json",
 };
 
-export default async (req, context) => {
-    if (req.method === "OPTIONS") {
-        return new Response(null, { status: 204, headers: CORS });
+export const handler = async (event) => {
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 204, headers: CORS, body: "" };
     }
 
-    const { token } = context.params;
+    // Token = dernier segment du path (ex: /api/session-status/AX7K2M)
+    const token = event.path.split("/").filter(Boolean).pop();
+
     if (!token) {
-        return new Response(JSON.stringify({ error: "missing_token" }), {
-            status: 400, headers: CORS,
-        });
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "missing_token" }) };
     }
 
     const store = getStore("sessions");
     const raw   = await store.get(token);
 
     if (!raw) {
-        return new Response(JSON.stringify({ error: "not_found" }), {
-            status: 404, headers: CORS,
-        });
+        return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "not_found" }) };
     }
 
     const session = JSON.parse(raw);
 
-    // Session expirée
     if (Date.now() > session.expires_at) {
         await store.delete(token);
-        return new Response(JSON.stringify({ error: "expired" }), {
-            status: 410, headers: CORS,
-        });
+        return { statusCode: 410, headers: CORS, body: JSON.stringify({ error: "expired" }) };
     }
 
-    // En attente
     if (session.status === "pending") {
-        return new Response(
-            JSON.stringify({ status: "pending" }),
-            { status: 200, headers: CORS }
-        );
+        return { statusCode: 200, headers: CORS, body: JSON.stringify({ status: "pending" }) };
     }
 
-    // Credentials reçus — on envoie une seule fois puis on supprime
+    // Completed — on envoie les credentials et on supprime la session
     if (session.status === "completed") {
         await store.delete(token);
-        return new Response(
-            JSON.stringify({ status: "completed", credentials: session.credentials }),
-            { status: 200, headers: CORS }
-        );
+        return {
+            statusCode: 200,
+            headers: CORS,
+            body: JSON.stringify({ status: "completed", credentials: session.credentials }),
+        };
     }
 
-    return new Response(JSON.stringify({ error: "unknown_state" }), {
-        status: 500, headers: CORS,
-    });
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: "unknown_state" }) };
 };
-
-export const config = { path: "/api/session-status/:token" };

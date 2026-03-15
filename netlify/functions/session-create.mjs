@@ -1,6 +1,6 @@
-// session-create.mjs
+// session-create.mjs  — Netlify Function v1
 // POST /api/session-create
-// Crée une session avec un token unique à 6 caractères (10 min TTL).
+// Crée une session QR Code avec token unique 6 chars (TTL 10 min).
 
 import { getStore } from "@netlify/blobs";
 
@@ -11,28 +11,23 @@ const CORS = {
 };
 
 function generateToken() {
-    // Caractères sans ambiguïté (pas I, O, 1, 0)
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     return Array.from({ length: 6 }, () =>
         chars[Math.floor(Math.random() * chars.length)]
     ).join("");
 }
 
-export default async (req) => {
-    if (req.method === "OPTIONS") {
-        return new Response(null, { status: 204, headers: CORS });
+export const handler = async (event) => {
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 204, headers: CORS, body: "" };
     }
-
-    if (req.method !== "POST") {
-        return new Response(JSON.stringify({ error: "method_not_allowed" }), {
-            status: 405, headers: CORS,
-        });
+    if (event.httpMethod !== "POST") {
+        return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: "method_not_allowed" }) };
     }
 
     const store = getStore("sessions");
-    const TTL   = 10 * 60 * 1000; // 10 minutes en ms
+    const TTL   = 10 * 60 * 1000;
 
-    // Génère un token unique (max 5 tentatives)
     let token;
     for (let i = 0; i < 5; i++) {
         const candidate = generateToken();
@@ -41,9 +36,7 @@ export default async (req) => {
     }
 
     if (!token) {
-        return new Response(JSON.stringify({ error: "token_generation_failed" }), {
-            status: 500, headers: CORS,
-        });
+        return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: "token_generation_failed" }) };
     }
 
     const session = {
@@ -54,10 +47,9 @@ export default async (req) => {
 
     await store.set(token, JSON.stringify(session));
 
-    return new Response(
-        JSON.stringify({ token, expires_in: TTL / 1000 }),
-        { status: 200, headers: CORS }
-    );
+    return {
+        statusCode: 200,
+        headers: CORS,
+        body: JSON.stringify({ token, expires_in: TTL / 1000 }),
+    };
 };
-
-export const config = { path: "/api/session-create" };
