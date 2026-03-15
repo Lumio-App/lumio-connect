@@ -24,7 +24,7 @@ exports.handler = async (event) => {
         return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: "method_not_allowed" }) };
     }
 
-    const store = getStore("sessions");
+    const store = getStore({ name: "sessions", siteID: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN });
     const TTL   = 10 * 60 * 1000;
 
     let token;

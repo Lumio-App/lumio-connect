@@ -18,7 +18,7 @@ exports.handler = async (event) => {
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "missing_token" }) };
     }
 
-    const store = getStore("sessions");
+    const store = getStore({ name: "sessions", siteID: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN });
     const raw   = await store.get(token);
 
     if (!raw) {
