@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMIO — HomeView Concepts</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#080612;font-family:-apple-system,'SF Pro Display',sans-serif;color:#fff;padding:32px 24px 60px;}
+
+h1{text-align:center;font-size:13px;letter-spacing:.3em;color:rgba(255,255,255,.18);text-transform:uppercase;margin-bottom:8px;}
+.subtitle{text-align:center;font-size:11px;color:rgba(255,255,255,.10);letter-spacing:.15em;margin-bottom:40px;}
+
+/* ── Tabs ── */
+.tabs{display:flex;justify-content:center;gap:8px;margin-bottom:36px;}
+.tab{padding:8px 22px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.04em;cursor:pointer;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:rgba(255,255,255,.40);transition:all .2s;}
+.tab.active{background:rgba(91,138,255,.18);border-color:rgba(91,138,255,.50);color:rgba(140,190,255,.95);}
+
+/* ── Concept cards ── */
+.concept{display:none;}
+.concept.active{display:block;}
+
+.concept-label{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.18);margin-bottom:12px;text-align:center;}
+
+/* ════════════════════════════════════════
+   CONCEPT A — Sidebar + Content
+   ════════════════════════════════════════ */
+.tv-frame{
+  max-width:900px;margin:0 auto;
+  background:#03020A;border-radius:16px;
+  overflow:hidden;border:1px solid rgba(255,255,255,.06);
+  box-shadow:0 0 60px rgba(0,0,0,.60);
+}
+
+/* A — sidebar */
+.layout-a{display:flex;height:520px;}
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:rgba(255,255,255,.025);
+  border-right:1px solid rgba(255,255,255,.05);
+  display:flex;flex-direction:column;
+  padding:28px 0;
+}
+.sidebar-logo{
+  text-align:center;margin-bottom:28px;
+  font-size:22px;font-weight:900;letter-spacing:6px;
+  background:linear-gradient(135deg,#C8DEFF,#fff,#C8DEFF);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nav-section{font-size:8px;font-weight:700;letter-spacing:.18em;color:rgba(255,255,255,.18);text-transform:uppercase;padding:0 20px;margin:16px 0 6px;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 20px;cursor:pointer;
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.45);
+  border-left:2px solid transparent;
+  transition:all .15s;
+}
+.nav-item.active{
+  color:#fff;background:rgba(91,138,255,.12);
+  border-left-color:rgba(91,138,255,.80);
+}
+.nav-item .icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{
+  margin-left:auto;font-size:9px;font-weight:700;
+  background:rgba(255,80,80,.25);color:rgba(255,120,120,.90);
+  padding:2px 6px;border-radius:10px;
+}
+.sidebar-spacer{flex:1;}
+.nav-item.bottom{opacity:.50;}
+
+.main-content{flex:1;overflow:hidden;padding:24px;}
+.hero-row{
+  height:200px;border-radius:14px;margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(91,138,255,.18),rgba(112,33,210,.15));
+  border:1px solid rgba(91,138,255,.18);
+  display:flex;align-items:flex-end;padding:20px;
+  position:relative;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,
+    rgba(40,20,80,.60) 0%,
+    rgba(20,10,40,.80) 100%);
+}
+.hero-text{position:relative;z-index:1;}
+.hero-badge{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,210,80,.90);background:rgba(255,210,80,.15);border:1px solid rgba(255,210,80,.25);border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:6px;}
+.hero-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.45);}
+.hero-actions{display:flex;gap:8px;margin-top:10px;}
+.btn-hero{font-size:11px;font-weight:700;padding:6px 16px;border-radius:8px;border:none;cursor:pointer;}
+.btn-primary{background:rgba(91,138,255,.90);color:#fff;}
+.btn-ghost{background:rgba(255,255,255,.10);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.15);}
+
+.row-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px;}
+.cards-row{display:flex;gap:10px;overflow:hidden;}
+.card{
+  flex-shrink:0;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.06);
+  overflow:hidden;
+}
+.card-thumb{height:70px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.card-info{padding:8px 10px;background:rgba(255,255,255,.03);}
+.card-name{font-size:10px;font-weight:600;color:rgba(255,255,255,.80);}
+.card-meta{font-size:9px;color:rgba(255,255,255,.30);margin-top:2px;}
+
+/* ════════════════════════════════════════
+   CONCEPT B — Top Tabs + Netflix rows
+   ════════════════════════════════════════ */
+.layout-b{height:520px;display:flex;flex-direction:column;}
+.top-nav{
+  display:flex;align-items:center;
+  padding:18px 28px 0;gap:0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.top-logo{font-size:18px;font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#C8DEFF,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-right:32px;}
+.top-tab{font-size:12px;font-weight:600;padding:10px 16px;color:rgba(255,255,255,.35);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.top-tab.active{color:#fff;border-bottom-color:rgba(91,138,255,.90);}
+.top-search{margin-left:auto;font-size:18px;opacity:.30;cursor:pointer;}
+
+.b-content{flex:1;padding:20px 28px;overflow:hidden;}
+.b-hero{
+  height:190px;border-radius:14px;margin-bottom:22px;
+  background:linear-gradient(90deg,rgba(112,33,210,.25) 0%,rgba(20,10,60,.90) 60%,#03020A 100%);
+  border:1px solid rgba(112,33,210,.20);
+  display:flex;align-items:center;padding:0 28px;
+  position:relative;overflow:hidden;
+}
+.b-hero-art{position:absolute;right:0;top:0;bottom:0;width:55%;background:linear-gradient(90deg,transparent,rgba(20,10,60,.60)),linear-gradient(135deg,rgba(160,100,255,.15),rgba(91,138,255,.10));display:flex;align-items:center;justify-content:center;font-size:48px;}
+.b-hero-info{position:relative;z-index:1;}
+.b-hero-tag{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(75,201,168,.90);margin-bottom:6px;}
+.b-hero-title{font-size:26px;font-weight:900;margin-bottom:4px;line-height:1.1;}
+.b-hero-meta{font-size:10px;color:rgba(255,255,255,.40);margin-bottom:10px;}
+.b-btns{display:flex;gap:8px;}
+.b-btn{font-size:10px;font-weight:700;padding:6px 16px;border-radius:7px;cursor:pointer;border:none;}
+
+.row-section{margin-bottom:16px;}
+.row-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.40);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.b-cards{display:flex;gap:8px;}
+.b-card{flex-shrink:0;width:100px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.05);}
+.b-card-art{height:60px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.b-card-label{font-size:9px;font-weight:600;padding:6px 8px;color:rgba(255,255,255,.70);background:rgba(255,255,255,.03);}
+
+/* ════════════════════════════════════════
+   CONCEPT C — Dashboard Metro
+   ════════════════════════════════════════ */
+.layout-c{height:520px;padding:20px 24px;display:flex;flex-direction:column;gap:16px;}
+.c-header{display:flex;align-items:center;gap:0;}
+.c-logo{font-size:20px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#C8DEFF,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.c-greeting{margin-left:16px;font-size:12px;color:rgba(255,255,255,.28);}
+.c-search{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:6px;}
+
+.c-grid{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;flex:1;}
+.c-tile{border-radius:14px;border:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:14px;position:relative;cursor:pointer;}
+.c-tile-bg{position:absolute;inset:0;}
+.c-tile.hero{grid-row:1/3;background:linear-gradient(135deg,rgba(91,138,255,.15),rgba(40,20,80,.60));}
+.c-tile.t1{background:linear-gradient(135deg,rgba(255,185,40,.10),rgba(200,100,20,.15));}
+.c-tile.t2{background:linear-gradient(135deg,rgba(75,201,168,.10),rgba(20,120,90,.15));}
+.c-tile.t3{background:linear-gradient(135deg,rgba(160,100,255,.12),rgba(80,20,140,.20));}
+.c-tile.t4{background:linear-gradient(135deg,rgba(255,80,120,.10),rgba(150,20,60,.20));}
+.c-tile-icon{font-size:28px;margin-bottom:8px;position:relative;z-index:1;}
+.c-tile-title{font-size:13px;font-weight:700;position:relative;z-index:1;}
+.c-tile-sub{font-size:10px;color:rgba(255,255,255,.38);margin-top:3px;position:relative;z-index:1;}
+.c-tile.hero .c-tile-title{font-size:18px;font-weight:800;}
+.c-tile-badge{position:absolute;top:12px;right:12px;background:rgba(255,80,80,.25);color:rgba(255,120,120,.90);font-size:8px;font-weight:700;padding:2px 7px;border-radius:10px;z-index:1;}
+.c-tile-live{position:absolute;top:12px;left:12px;background:rgba(255,60,60,.85);color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:6px;z-index:1;letter-spacing:.08em;display:flex;align-items:center;gap:4px;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#fff;animation:pulse 1s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ════════════════════════════════════════
+   Description cards
+   ════════════════════════════════════════ */
+.desc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:900px;margin:20px auto 0;}
+.desc-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 16px;}
+.desc-title{font-size:10px;font-weight:700;color:rgba(255,255,255,.55);margin-bottom:8px;letter-spacing:.05em;}
+.desc-item{font-size:9px;color:rgba(255,255,255,.28);padding:3px 0;display:flex;align-items:flex-start;gap:6px;line-height:1.5;}
+.desc-item::before{content:"·";color:rgba(91,138,255,.60);flex-shrink:0;}
+.pro{color:rgba(75,201,168,.70);}
+.con{color:rgba(255,120,80,.60);}
+
+/* ════════════════════════════════════════
+   Gradient accents
+   ════════════════════════════════════════ */
+.accent-amber{background:linear-gradient(135deg,rgba(255,185,40,.25),rgba(200,100,20,.15));}
+.accent-blue{background:linear-gradient(135deg,rgba(91,138,255,.25),rgba(40,20,120,.20));}
+.accent-teal{background:linear-gradient(135deg,rgba(75,201,168,.20),rgba(20,100,80,.15));}
+.accent-purple{background:linear-gradient(135deg,rgba(160,100,255,.22),rgba(80,20,140,.18));}
+</style>
+</head>
+<body>
+
+<h1>LUMIO — HomeView</h1>
+<p class="subtitle">3 concepts de mise en page tvOS</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="show('a',this)">A — Sidebar</div>
+  <div class="tab" onclick="show('b',this)">B — Netflix Rows</div>
+  <div class="tab" onclick="show('c',this)">C — Dashboard Metro</div>
+</div>
+
+<!-- ══════ CONCEPT A ══════ -->
+<div class="concept active" id="ca">
+  <p class="concept-label">Concept A — Navigation latérale + contenu central</p>
+  <div class="tv-frame">
+    <div class="layout-a">
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">LUMIO</div>
+
+        <div class="nav-section">Principal</div>
+        <div class="nav-item active"><span class="icon">📺</span> Live TV</div>
+        <div class="nav-item"><span class="icon">🎬</span> Films <span class="nav-badge">HD</span></div>
+        <div class="nav-item"><span class="icon">📽</span> Séries</div>
+        <div class="nav-item"><span class="icon">⏪</span> Replay</div>
+
+        <div class="nav-section">Perso</div>
+        <div class="nav-item"><span class="icon">⭐</span> Favoris</div>
+        <div class="nav-item"><span class="icon">🕐</span> Historique</div>
+
+        <div class="sidebar-spacer"></div>
+        <div class="nav-item bottom"><span class="icon">⚙️</span> Réglages</div>
+        <div class="nav-item bottom"><span class="icon">↩</span> Changer playlist</div>
+      </div>
+
+      <!-- Main -->
+      <div class="main-content">
+        <!-- Hero -->
+        <div class="hero-row">
+          <div class="hero-bg"></div>
+          <div class="hero-text">
+            <div class="hero-badge">🔴 En direct maintenant</div>
+            <div class="hero-title">TF1 — Journal de 20h</div>
+            <div class="hero-sub">Informations · HD · 1 054 spectateurs</div>
+            <div class="hero-actions">
+              <button class="btn-hero btn-primary">▶ Regarder</button>
+              <button class="btn-hero btn-ghost">+ Favoris</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rows -->
+        <div class="row-label">Chaînes recommandées</div>
+        <div class="cards-row">
+          <div class="card" style="width:100px;background:rgba(255,185,40,.08);">
+            <div class="card-thumb" style="background:rgba(255,185,40,.12);">📺</div>
+            <div class="card-info"><div class="card-name">TF1</div><div class="card-meta">🔴 Live</div></div>
+          </div>
+          <div class="card" style="width:100px;background:rgba(91,138,255,.06);">
+            <div class="card-thumb" style="background:rgba(91,138,255,.10);">🎙</div>
+            <div class="card-info"><div class="card-name">France 2</div><div class="card-meta">🔴 Live</div></div>
+          </div>
+          <div class="card" style="width:100px;background:rgba(75,201,168,.06);">
+            <div class="card-thumb" style="background:rgba(75,201,168,.10);">🎬</div>
+            <div class="card-info"><div class="card-name">M6</div><div class="card-meta">🔴 Live</div></div>
+          </div>
+          <div class="card" style="width:100px;background:rgba(160,100,255,.06);">
+            <div class="card-thumb" style="background:rgba(160,100,255,.10);">🌍</div>
+            <div class="card-info"><div class="card-name">Arte</div><div class="card-meta">🔴 Live</div></div>
+          </div>
+          <div class="card" style="width:100px;background:rgba(255,80,120,.06);">
+            <div class="card-thumb" style="background:rgba(255,80,120,.10);">🎭</div>
+            <div class="card-info"><div class="card-name">Canal+</div><div class="card-meta">🔴 Live</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="desc-grid">
+    <div class="desc-card">
+      <div class="desc-title">✦ Points forts</div>
+      <div class="desc-item pro">Navigation claire et permanente</div>
+      <div class="desc-item pro">Idéal pour grandes bibliothèques</div>
+      <div class="desc-item pro">Familier (Infuse, Plex, Emby)</div>
+    </div>
+    <div class="desc-card">
+      <div class="desc-title">⚠ Points faibles</div>
+      <div class="desc-item con">Sidebar prend de la place</div>
+      <div class="desc-item con">Moins immersif que les autres</div>
+    </div>
+    <div class="desc-card">
+      <div class="desc-title">Idéal pour</div>
+      <div class="desc-item">Utilisateurs habitués à Plex/Infuse</div>
+      <div class="desc-item">Grosses playlists avec catégories</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ CONCEPT B ══════ -->
+<div class="concept" id="cb">
+  <p class="concept-label">Concept B — Navigation top + lignes horizontales (Netflix/Apple TV)</p>
+  <div class="tv-frame">
+    <div class="layout-b">
+      <div class="top-nav">
+        <div class="top-logo">LUMIO</div>
+        <div class="top-tab active">Accueil</div>
+        <div class="top-tab">Live TV</div>
+        <div class="top-tab">Films</div>
+        <div class="top-tab">Séries</div>
+        <div class="top-tab">Replay</div>
+        <div class="top-search">⌕</div>
+      </div>
+
+      <div class="b-content">
+        <div class="b-hero">
+          <div class="b-hero-art">🎬</div>
+          <div class="b-hero-info">
+            <div class="b-hero-tag">✦ Recommandé</div>
+            <div class="b-hero-title">Dune: Partie 2</div>
+            <div class="b-hero-meta">2024 · 2h46 · 4K HDR · Science-fiction</div>
+            <div class="b-btns">
+              <button class="b-btn" style="background:rgba(255,255,255,.92);color:#080612;">▶ Lire</button>
+              <button class="b-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.20);">ⓘ Détails</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row-section">
+          <div class="row-title">🔴 En ce moment sur Live TV</div>
+          <div class="b-cards">
+            <div class="b-card accent-amber"><div class="b-card-art">📺</div><div class="b-card-label">TF1 · Live</div></div>
+            <div class="b-card accent-blue"><div class="b-card-art">🎙</div><div class="b-card-label">France 2 · Live</div></div>
+            <div class="b-card accent-teal"><div class="b-card-art">🎬</div><div class="b-card-label">M6 · Live</div></div>
+            <div class="b-card accent-purple"><div class="b-card-art">🌍</div><div class="b-card-label">Arte · Live</div></div>
+            <div class="b-card" style="background:rgba(255,80,120,.10);border-color:rgba(255,80,120,.15);"><div class="b-card-art">🎭</div><div class="b-card-label">Canal+ · Live</div></div>
+            <div class="b-card accent-amber"><div class="b-card-art">⚽</div><div class="b-card-label">beIN Sports</div></div>
+          </div>
+        </div>
+
+        <div class="row-section">
+          <div class="row-title">🎬 Films récents</div>
+          <div class="b-cards">
+            <div class="b-card accent-purple"><div class="b-card-art">🚀</div><div class="b-card-label">Dune 2</div></div>
+            <div class="b-card accent-blue"><div class="b-card-art">🦸</div><div class="b-card-label">Oppenheimer</div></div>
+            <div class="b-card accent-teal"><div class="b-card-art">🎭</div><div class="b-card-label">Barbie</div></div>
+            <div class="b-card accent-amber"><div class="b-card-art">👾</div><div class="b-card-label">The Menu</div></div>
+            <div class="b-card accent-purple"><div class="b-card-art">🌊</div><div class="b-card-label">Avatar 2</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="desc-grid">
+    <div class="desc-card">
+      <div class="desc-title">✦ Points forts</div>
+      <div class="desc-item pro">Pattern familier (Netflix, Apple TV+)</div>
+      <div class="desc-item pro">Très immersif, grand hero visuel</div>
+      <div class="desc-item pro">Parfait pour la découverte de contenu</div>
+    </div>
+    <div class="desc-card">
+      <div class="desc-title">⚠ Points faibles</div>
+      <div class="desc-item con">Navigation entre tabs moins rapide</div>
+      <div class="desc-item con">Nécessite des métadonnées/images</div>
+    </div>
+    <div class="desc-card">
+      <div class="desc-title">Idéal pour</div>
+      <div class="desc-item">Bibliothèques VOD riches</div>
+      <div class="desc-item">Expérience "premium streaming"</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ CONCEPT C ══════ -->
+<div class="concept" id="cc">
+  <p class="concept-label">Concept C — Dashboard Metro / tuiles dynamiques</p>
+  <div class="tv-frame">
+    <div class="layout-c">
+
+      <div class="c-header">
+        <div class="c-logo">LUMIO</div>
+        <div class="c-greeting">Bonsoir · Ma Playlist Principale</div>
+        <div class="c-search">⌕&nbsp; Rechercher…</div>
+      </div>
+
+      <div class="c-grid">
+
+        <div class="c-tile hero">
+          <div class="c-tile-live"><div class="live-dot"></div>LIVE</div>
+          <div class="c-tile-icon">📺</div>
+          <div class="c-tile-title">TF1 — 20h</div>
+          <div class="c-tile-sub">Journal · HD · 3 845 viewers</div>
+        </div>
+
+        <div class="c-tile t1">
+          <div class="c-tile-badge">1 200+</div>
+          <div class="c-tile-icon">📡</div>
+          <div class="c-tile-title">Live TV</div>
+          <div class="c-tile-sub">Chaînes françaises, sport, news</div>
+        </div>
+
+        <div class="c-tile t2">
+          <div class="c-tile-icon">🎬</div>
+          <div class="c-tile-title">Films</div>
+          <div class="c-tile-sub">4K · HDR · VF / VOST</div>
+        </div>
+
+        <div class="c-tile t3">
+          <div class="c-tile-badge">Nouveau</div>
+          <div class="c-tile-icon">📽</div>
+          <div class="c-tile-title">Séries</div>
+          <div class="c-tile-sub">Saisons complètes</div>
+        </div>
+
+        <div class="c-tile t4">
+          <div class="c-tile-icon">⏪</div>
+          <div class="c-tile-title">Replay</div>
+          <div class="c-tile-sub">7 derniers jours</div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="desc-grid">
+    <div class="desc-card">
+      <div class="desc-title">✦ Points forts</div>
+      <div class="desc-item pro">Design unique, très différenciant</div>
+      <div class="desc-item pro">Accès direct en 1 clic</div>
+      <div class="desc-item pro">Fonctionne sans métadonnées</div>
+    </div>
+    <div class="desc-card">
+      <div class="desc-title">⚠ Points faibles</div>
+      <div class="desc-item con">Moins familier pour les utilisateurs</div>
+      <div class="desc-item con">Moins adapté aux très grandes listes</div>
+    </div>
+    <div class="desc-card">
+      <div class="desc-title">Idéal pour</div>
+      <div class="desc-item">App avec identité visuelle forte</div>
+      <div class="desc-item">Utilisateurs qui veulent aller vite</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id, el) {
+  document.querySelectorAll('.concept').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('c'+id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
