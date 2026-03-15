@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#03020A">
+  <title>LUMIO — Connexion rapide</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #03020A;
+      --surface: rgba(255,255,255,0.04);
+      --border:  rgba(255,255,255,0.09);
+      --blue:    rgb(91,138,255);
+      --teal:    rgb(75,201,168);
+      --amber:   rgb(255,210,80);
+      --text:    rgba(255,255,255,0.88);
+      --muted:   rgba(255,255,255,0.35);
+      --error:   rgba(255,80,80,0.90);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, 'SF Pro Text', sans-serif;
+      min-height: 100dvh;
+    }
+
+    body { padding: 0 0 env(safe-area-inset-bottom); }
+
+    /* ── Layout ── */
+    .page { display: flex; flex-direction: column; min-height: 100dvh; }
+    .header {
+      text-align: center;
+      padding: 32px 24px 20px;
+      background: linear-gradient(180deg, rgba(91,138,255,0.06) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-size: 32px; font-weight: 900; letter-spacing: 8px;
+      background: linear-gradient(135deg, #C8DEFF 0%, #fff 50%, #C8DEFF 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    .logo-sub {
+      font-size: 11px; letter-spacing: 3px; color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .content { flex: 1; padding: 24px 20px; max-width: 480px; margin: 0 auto; width: 100%; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 10px;
+    }
+
+    /* ── Type pills ── */
+    .pills {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .pill {
+      flex: 1; min-width: 80px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 14px; border-radius: 24px; cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 13px; font-weight: 700;
+      color: var(--muted);
+      transition: all .18s ease; user-select: none; -webkit-user-select: none;
+    }
+    .pill.active { color: #fff; }
+    .pill-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      transition: all .18s ease;
+    }
+    .pill[data-type="xtream"] .pill-dot { background: rgb(255,210,80); }
+    .pill[data-type="m3u"]    .pill-dot { background: rgb(91,138,255); }
+    .pill[data-type="m3ufile"] .pill-dot { background: rgb(160,100,255); }
+    .pill[data-type="xtream"].active  { background: rgba(255,210,80,.12); border-color: rgba(255,210,80,.45); }
+    .pill[data-type="m3u"].active     { background: rgba(91,138,255,.12); border-color: rgba(91,138,255,.45); }
+    .pill[data-type="m3ufile"].active { background: rgba(160,100,255,.12); border-color: rgba(160,100,255,.45); }
+    .pill-badge {
+      font-size: 9px; font-weight: 700; padding: 1px 6px;
+      border-radius: 20px; background: rgba(255,210,80,.18);
+      color: rgba(255,210,80,.90); letter-spacing: .5px;
+    }
+
+    /* ── Fields ── */
+    .fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .field { display: none; }
+    .field.visible { display: flex; flex-direction: column; gap: 5px; }
+    .field-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.8px;
+      color: var(--muted); text-transform: uppercase;
+    }
+    .field input {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: #fff; font-size: 16px; /* 16px évite le zoom iOS */
+      padding: 14px 16px;
+      outline: none; width: 100%;
+      -webkit-appearance: none; appearance: none;
+      transition: border-color .18s ease, background .18s ease;
+    }
+    .field input:focus {
+      border-color: rgba(91,138,255,.65);
+      background: rgba(91,138,255,.07);
+    }
+    .field input::placeholder { color: rgba(255,255,255,.22); }
+
+    /* ── Error ── */
+    .error-banner {
+      display: none;
+      background: rgba(255,60,60,.10); border: 1px solid rgba(255,60,60,.30);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: 13px; color: var(--error);
+      margin-bottom: 16px;
+    }
+    .error-banner.visible { display: block; }
+
+    /* ── Submit button ── */
+    .btn-submit {
+      width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+      font-size: 17px; font-weight: 700; color: #fff;
+      background: linear-gradient(90deg, rgb(54,90,240) 0%, rgb(112,33,210) 100%);
+      box-shadow: 0 0 24px rgba(91,138,255,.25);
+      transition: opacity .15s ease, transform .12s ease;
+      -webkit-appearance: none; appearance: none;
+      position: relative; overflow: hidden;
+    }
+    .btn-submit:active { opacity: .85; transform: scale(.98); }
+    .btn-submit:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* Spinner inside button */
+    .btn-spinner {
+      display: none; width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.30);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── States overlay ── */
+    .state { display: none; text-align: center; padding: 32px 0; }
+    .state.visible { display: block; }
+    .state-icon { font-size: 52px; margin-bottom: 16px; }
+    .state-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .state-sub { font-size: 14px; color: var(--muted); line-height: 1.55; }
+    .state-token {
+      display: inline-block; margin-top: 12px;
+      font-size: 22px; font-weight: 800; letter-spacing: 6px;
+      color: var(--blue);
+      background: rgba(91,138,255,.10);
+      border: 1px solid rgba(91,138,255,.25);
+      border-radius: 12px; padding: 8px 20px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center; padding: 16px 20px;
+      font-size: 11px; color: rgba(255,255,255,.12);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">LUMIO</div>
+    <div class="logo-sub">Connexion rapide depuis votre téléphone</div>
+  </header>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- Loading state -->
+    <div class="state visible" id="state-loading">
+      <div class="state-icon">⏳</div>
+      <div class="state-title">Chargement…</div>
+      <div class="state-sub">Vérification de la session en cours.</div>
+    </div>
+
+    <!-- Error state -->
+    <div class="state" id="state-error">
+      <div class="state-icon">⚠️</div>
+      <div class="state-title" id="error-title">Session invalide</div>
+      <div class="state-sub" id="error-sub">Ce QR Code est expiré ou introuvable.<br>Retournez sur votre Apple TV et générez un nouveau QR Code.</div>
+    </div>
+
+    <!-- Form state -->
+    <div class="state" id="state-form">
+
+      <!-- Type selector -->
+      <div style="text-align:left; margin-bottom:20px;">
+        <div class="section-title">Type de playlist</div>
+        <div class="pills">
+          <div class="pill active" data-type="xtream" onclick="selectType('xtream')">
+            <span class="pill-dot"></span>
+            Xtream Codes
+            <span class="pill-badge">★</span>
+          </div>
+          <div class="pill" data-type="m3u" onclick="selectType('m3u')">
+            <span class="pill-dot"></span>
+            M3U / M3U8
+          </div>
+          <div class="pill" data-type="m3ufile" onclick="selectType('m3ufile')">
+            <span class="pill-dot"></span>
+            Fichier local
+          </div>
+        </div>
+      </div>
+
+      <!-- Fields -->
+      <div style="text-align:left;">
+        <div class="section-title" id="fields-label">Identifiants</div>
+        <div class="fields">
+
+          <!-- Commun -->
+          <div class="field visible" id="field-name">
+            <label class="field-label">Nom de la playlist</label>
+            <input type="text" id="playlist_name" placeholder="Ma Playlist Principale"
+                   autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          </div>
+
+          <!-- Xtream -->
+          <div class="field visible" id="field-server">
+            <label class="field-label">URL du serveur</label>
+            <input type="url" id="server_url" placeholder="http://serveur.com:8080"
+                   autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+          </div>
+          <div class="field visible" id="field-username">
+            <label class="field-label">Nom d'utilisateur</label>
+            <input type="text" id="username" placeholder="Votre identifiant"
+                   autocomplete="username" autocorrect="off" autocapitalize="none" spellcheck="false">
+          </div>
+          <div class="field visible" id="field-password">
+            <label class="field-label">Mot de passe</label>
+            <input type="password" id="password" placeholder="••••••••••"
+                   autocomplete="current-password">
+          </div>
+
+          <!-- M3U -->
+          <div class="field" id="field-m3u">
+            <label class="field-label">URL M3U / M3U8</label>
+            <input type="url" id="m3u_url" placeholder="http://provider.com/playlist.m3u8"
+                   autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+          </div>
+
+          <!-- File (info only) -->
+          <div class="field" id="field-file">
+            <div style="background:rgba(160,100,255,.08); border:1px solid rgba(160,100,255,.25); border-radius:12px; padding:14px; font-size:13px; color:rgba(255,255,255,.50); line-height:1.6;">
+              📁 Le fichier M3U local doit être sélectionné directement sur votre Apple TV.<br>
+              Renseignez ici le nom de la playlist, puis validez.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error banner -->
+      <div class="error-banner" id="form-error"></div>
+
+      <!-- Submit -->
+      <button class="btn-submit" id="btn-submit" onclick="submit()">
+        <span id="btn-label">Envoyer à l'Apple TV</span>
+        <div class="btn-spinner" id="btn-spinner"></div>
+      </button>
+
+      <!-- Token display -->
+      <div style="text-align:center; margin-top:16px;">
+        <div style="font-size:11px; color:rgba(255,255,255,.18); margin-bottom:4px;">Session</div>
+        <div class="state-token" id="display-token">------</div>
+      </div>
+
+    </div><!-- /state-form -->
+
+    <!-- Success state -->
+    <div class="state" id="state-success">
+      <div class="state-icon">✅</div>
+      <div class="state-title">Identifiants envoyés !</div>
+      <div class="state-sub">
+        Retournez sur votre Apple TV.<br>
+        La connexion va démarrer automatiquement.
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">LUMIO — tvOS 18</footer>
+</div>
+
+<script>
+  // ── Config ──────────────────────────────────────
+  const BASE_URL = location.origin; // même domaine Netlify
+
+  // ── State ────────────────────────────────────────
+  let currentType  = "xtream";
+  let sessionToken = null;
+
+  // ── Init ─────────────────────────────────────────
+  (async () => {
+    // Extrait le token depuis le path /c/TOKEN
+    const parts = location.pathname.split("/").filter(Boolean);
+    const token  = parts[parts.length - 1];
+
+    if (!token || token === "c") {
+      showState("error");
+      return;
+    }
+
+    // Vérifie que la session est valide (pending)
+    try {
+      const res  = await fetch(`${BASE_URL}/api/session-status/${token}`);
+      const data = await res.json();
+
+      if (!res.ok || data.error === "expired") {
+        setError("Session expirée", "Ce QR Code n'est plus valable.<br>Retournez sur votre Apple TV pour en générer un nouveau.");
+        showState("error");
+        return;
+      }
+      if (data.error === "not_found") {
+        setError("QR Code introuvable", "Vérifiez que vous avez bien scanné le bon QR Code.");
+        showState("error");
+        return;
+      }
+      if (data.status === "completed") {
+        setError("Déjà utilisé", "Ces identifiants ont déjà été envoyés à l'Apple TV.");
+        showState("error");
+        return;
+      }
+
+      sessionToken = token;
+      document.getElementById("display-token").textContent = token;
+      showState("form");
+
+    } catch (err) {
+      setError("Erreur réseau", "Impossible de contacter le serveur LUMIO.<br>Vérifiez votre connexion internet.");
+      showState("error");
+    }
+  })();
+
+  // ── Type selection ────────────────────────────────
+  function selectType(type) {
+    currentType = type;
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    document.querySelector(`.pill[data-type="${type}"]`).classList.add("active");
+
+    // Champs visibles selon le type
+    const xtream  = ["field-server", "field-username", "field-password"];
+    const m3u     = ["field-m3u"];
+    const m3ufile = ["field-file"];
+
+    const allFields = [...xtream, ...m3u, ...m3ufile];
+    const show = type === "xtream" ? xtream : type === "m3u" ? m3u : m3ufile;
+
+    allFields.forEach(id => {
+      document.getElementById(id).classList.toggle("visible", show.includes(id));
+    });
+
+    document.getElementById("fields-label").textContent =
+      type === "xtream" ? "Identifiants Xtream Codes" :
+      type === "m3u"    ? "URL de la playlist M3U"    : "Informations";
+  }
+
+  // ── Submit ────────────────────────────────────────
+  async function submit() {
+    if (!sessionToken) return;
+    hideError();
+
+    // Validation
+    const name = val("playlist_name");
+    if (!name) { showError("Veuillez nommer votre playlist."); return; }
+
+    let credentials = { playlist_type: currentType, playlist_name: name };
+
+    if (currentType === "xtream") {
+      const server = val("server_url");
+      const user   = val("username");
+      const pass   = val("password");
+      if (!server || !user || !pass) {
+        showError("Veuillez remplir tous les identifiants Xtream Codes."); return;
+      }
+      credentials = { ...credentials, server_url: server, username: user, password: pass };
+    }
+
+    if (currentType === "m3u") {
+      const url = val("m3u_url");
+      if (!url) { showError("Veuillez saisir l'URL M3U."); return; }
+      credentials = { ...credentials, m3u_url: url };
+    }
+
+    // Loading
+    setLoading(true);
+
+    try {
+      const res  = await fetch(`${BASE_URL}/api/session-submit/${sessionToken}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msgs = {
+          expired:          "La session a expiré. Retournez sur l'Apple TV.",
+          already_submitted: "Ces identifiants ont déjà été envoyés.",
+          not_found:         "Session introuvable.",
+        };
+        showError(msgs[data.error] || `Erreur : ${data.error}`);
+        return;
+      }
+
+      showState("success");
+
+    } catch {
+      showError("Erreur réseau. Vérifiez votre connexion.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────
+  function val(id) { return (document.getElementById(id)?.value || "").trim(); }
+
+  function showState(name) {
+    ["loading", "error", "form", "success"].forEach(s => {
+      document.getElementById(`state-${s}`).classList.toggle("visible", s === name);
+    });
+  }
+
+  function setError(title, sub) {
+    document.getElementById("error-title").textContent = title;
+    document.getElementById("error-sub").innerHTML    = sub;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("form-error");
+    el.textContent = msg;
+    el.classList.add("visible");
+  }
+
+  function hideError() {
+    document.getElementById("form-error").classList.remove("visible");
+  }
+
+  function setLoading(loading) {
+    document.getElementById("btn-submit").disabled    = loading;
+    document.getElementById("btn-label").style.display  = loading ? "none"   : "inline";
+    document.getElementById("btn-spinner").style.display = loading ? "block"  : "none";
+  }
+</script>
+</body>
+</html>
