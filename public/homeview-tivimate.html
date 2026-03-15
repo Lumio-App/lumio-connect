@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LUMIO — TiviMate-inspired Design</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#080612;font-family:-apple-system,'SF Pro Display',sans-serif;color:#fff;padding:24px 16px 60px;}
+
+.page-title{text-align:center;font-size:11px;letter-spacing:.28em;color:rgba(255,255,255,.14);text-transform:uppercase;margin-bottom:4px;}
+.page-sub{text-align:center;font-size:12px;color:rgba(255,255,255,.22);margin-bottom:6px;}
+.page-inspo{text-align:center;font-size:10px;color:rgba(75,201,168,.50);letter-spacing:.06em;margin-bottom:28px;}
+
+/* ── View tabs ── */
+.views{display:flex;justify-content:center;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
+.vbtn{padding:7px 16px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.35);transition:all .18s;}
+.vbtn.active{background:rgba(91,138,255,.20);border-color:rgba(91,138,255,.50);color:rgba(160,200,255,.95);}
+
+.view{display:none;}
+.view.active{display:block;}
+
+/* ── TV Frame ── */
+.tv{max-width:1000px;margin:0 auto;background:#03020A;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 80px rgba(0,0,0,.70);}
+
+/* ════════════════════════════════════════
+   ÉCRAN 1 — EPG PRINCIPAL (TiviMate style)
+   ════════════════════════════════════════
+   Layout :
+   [Sidebar] [Liste chaînes] [Grille EPG horizontale]
+                                              [Mini player coin haut droit]
+   ════════════════════════════════════════ */
+.epg-screen{display:flex;height:600px;}
+
+/* Sidebar gauche */
+.sidebar{
+  width:56px;flex-shrink:0;
+  background:rgba(0,0,0,.40);
+  border-right:1px solid rgba(255,255,255,.05);
+  display:flex;flex-direction:column;
+  align-items:center;padding:14px 0;gap:4px;
+}
+.s-logo{font-size:11px;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,#C8DEFF,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;writing-mode:vertical-rl;margin-bottom:16px;}
+.s-item{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;
+  border:1px solid transparent;
+  transition:all .15s;
+}
+.s-item.active{background:rgba(91,138,255,.18);border-color:rgba(91,138,255,.40);}
+.s-item:hover{background:rgba(255,255,255,.06);}
+.s-spacer{flex:1;}
+.s-item.settings{opacity:.40;}
+
+/* Liste chaînes */
+.ch-panel{
+  width:200px;flex-shrink:0;
+  border-right:1px solid rgba(255,255,255,.05);
+  display:flex;flex-direction:column;
+}
+.ch-panel-head{
+  padding:10px 12px 8px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  display:flex;align-items:center;gap:6px;
+}
+.ch-search{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:5px 8px;font-size:10px;color:rgba(255,255,255,.40);display:flex;align-items:center;gap:4px;}
+.ch-filter{font-size:9px;color:rgba(91,138,255,.60);font-weight:600;cursor:pointer;flex-shrink:0;}
+
+.ch-group-label{font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:8px 12px 4px;}
+
+.ch-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;cursor:pointer;
+  border-left:2px solid transparent;
+}
+.ch-item.focused{background:rgba(91,138,255,.12);border-left-color:rgba(91,138,255,.80);}
+.ch-item.focused .ch-name{color:#fff;}
+.ch-num{font-size:8px;color:rgba(255,255,255,.20);width:16px;text-align:right;flex-shrink:0;}
+.ch-logo-box{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ch-txt{flex:1;overflow:hidden;}
+.ch-name{font-size:11px;font-weight:600;color:rgba(255,255,255,.72);}
+.ch-prog-now{font-size:8px;color:rgba(255,255,255,.28);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.ch-live-badge{width:6px;height:6px;border-radius:50%;background:rgba(255,55,55,.85);flex-shrink:0;animation:blink 1.1s ease infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+.ch-fav{font-size:9px;color:rgba(255,185,40,.60);flex-shrink:0;}
+
+/* EPG Grid */
+.epg-panel{flex:1;display:flex;flex-direction:column;position:relative;}
+
+/* Mini player coin haut droit */
+.mini-player{
+  position:absolute;top:0;right:0;
+  width:220px;height:124px;
+  background:#000;
+  border-left:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  border-radius:0 0 0 12px;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  z-index:10;
+}
+.mini-video{flex:1;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,rgba(20,10,50,.80),rgba(5,3,15,.95));position:relative;}
+.mini-live-badge{position:absolute;top:6px;left:6px;background:rgba(255,50,50,.85);color:#fff;font-size:7px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.08em;display:flex;align-items:center;gap:3px;}
+.mini-live-dot{width:4px;height:4px;border-radius:50%;background:#fff;animation:blink 1s ease infinite;}
+.mini-quality{position:absolute;top:6px;right:6px;background:rgba(91,138,255,.25);color:rgba(140,190,255,.90);font-size:7px;font-weight:800;padding:2px 5px;border-radius:4px;}
+.mini-bar{background:rgba(0,0,0,.70);padding:5px 8px;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.mini-ch-name{font-size:9px;font-weight:700;color:rgba(255,255,255,.80);}
+.mini-prog{font-size:8px;color:rgba(255,255,255,.35);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mini-expand{font-size:10px;color:rgba(255,255,255,.30);cursor:pointer;}
+
+/* EPG time header */
+.epg-time-header{
+  display:flex;align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  padding:0 0 0 0;
+  flex-shrink:0;
+  height:32px;
+  padding-right:220px; /* space for mini player */
+}
+.epg-now-line-label{
+  width:32px;flex-shrink:0;
+  font-size:8px;font-weight:800;color:rgba(255,60,60,.80);
+  text-align:center;letter-spacing:.04em;
+}
+.epg-time-slots{flex:1;display:flex;}
+.time-slot{flex:1;padding:0 8px;font-size:9px;color:rgba(255,255,255,.28);font-weight:600;display:flex;align-items:center;}
+.time-slot.now-slot{color:rgba(91,138,255,.80);}
+
+/* EPG rows */
+.epg-rows{flex:1;overflow:hidden;padding-bottom:0;}
+.epg-row{
+  display:flex;align-items:stretch;
+  height:52px;
+  border-bottom:1px solid rgba(255,255,255,.03);
+}
+.epg-row-ch{
+  width:32px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+  border-right:1px solid rgba(255,255,255,.03);
+}
+.epg-row-programs{flex:1;display:flex;align-items:stretch;gap:1px;padding:4px 2px;overflow:hidden;}
+
+.epg-prog{
+  border-radius:6px;
+  padding:0 10px;
+  display:flex;align-items:center;
+  cursor:pointer;
+  position:relative;overflow:hidden;
+  min-width:0;
+  transition:all .12s;
+}
+.epg-prog.past{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);}
+.epg-prog.past .epg-prog-title{color:rgba(255,255,255,.28);}
+.epg-prog.past .epg-prog-time{color:rgba(255,255,255,.18);}
+
+.epg-prog.current{background:rgba(91,138,255,.14);border:1px solid rgba(91,138,255,.30);}
+.epg-prog.current .epg-prog-title{color:#fff;font-weight:700;}
+.epg-prog.current .epg-prog-time{color:rgba(91,138,255,.80);}
+
+.epg-prog.future{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);}
+.epg-prog.future .epg-prog-title{color:rgba(255,255,255,.65);}
+.epg-prog.future .epg-prog-time{color:rgba(255,255,255,.28);}
+
+.epg-prog.focused{background:rgba(91,138,255,.25);border:1px solid rgba(91,138,255,.60);transform:scaleY(1.04);}
+.epg-prog.focused .epg-prog-title{color:#fff;}
+
+.epg-prog-inner{overflow:hidden;}
+.epg-prog-title{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.epg-prog-time{font-size:8px;margin-top:1px;}
+
+/* Progress bar inside current program */
+.epg-prog-progress{
+  position:absolute;bottom:0;left:0;
+  height:2px;
+  background:linear-gradient(90deg,rgba(91,138,255,.90),rgba(160,100,255,.70));
+  border-radius:1px;
+}
+
+/* Now vertical line */
+.now-line{
+  position:absolute;
+  top:32px;bottom:0;
+  width:1px;
+  background:rgba(255,60,60,.60);
+  pointer-events:none;
+  z-index:5;
+}
+.now-line::before{
+  content:'▼';
+  position:absolute;top:-10px;left:-4px;
+  font-size:8px;color:rgba(255,60,60,.80);
+}
+
+/* Info strip at bottom */
+.epg-info-strip{
+  height:72px;flex-shrink:0;
+  background:rgba(0,0,0,.50);
+  border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;padding:0 16px;gap:16px;
+}
+.epg-info-thumb{width:50px;height:54px;border-radius:7px;background:linear-gradient(135deg,rgba(91,138,255,.18),rgba(160,100,255,.10));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid rgba(255,255,255,.06);}
+.epg-info-main{flex:1;}
+.epg-info-ch{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(91,138,255,.80);margin-bottom:3px;}
+.epg-info-title{font-size:15px;font-weight:800;margin-bottom:3px;}
+.epg-info-meta{font-size:10px;color:rgba(255,255,255,.35);}
+.epg-info-actions{display:flex;gap:6px;}
+.epg-btn{font-size:9px;font-weight:700;padding:5px 14px;border-radius:7px;border:none;cursor:pointer;}
+.epg-btn-play{background:rgba(255,255,255,.90);color:#06040F;}
+.epg-btn-catchup{background:rgba(75,201,168,.16);color:rgba(75,201,168,.90);border:1px solid rgba(75,201,168,.30);}
+.epg-btn-reminder{background:rgba(255,185,40,.12);color:rgba(255,185,40,.85);border:1px solid rgba(255,185,40,.25);}
+.epg-btn-more{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.10);}
+.epg-progress-wrap{width:160px;flex-shrink:0;}
+.epg-prog-pct-label{font-size:8px;color:rgba(255,255,255,.28);margin-bottom:3px;display:flex;justify-content:space-between;}
+.epg-prog-bar{height:3px;background:rgba(255,255,255,.10);border-radius:2px;overflow:hidden;}
+.epg-prog-bar-fill{height:100%;width:38%;background:linear-gradient(90deg,rgba(91,138,255,.90),rgba(160,100,255,.70));}
+
+/* ════════════════════════════════════════
+   ÉCRAN 2 — PLAYER IMMERSIF
+   ════════════════════════════════════════ */
+.player-screen{height:600px;background:#000;display:flex;flex-direction:column;position:relative;}
+.player-video{flex:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(15,8,40,.85),rgba(3,2,10,.95));font-size:80px;position:relative;}
+.player-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 20%,transparent 65%,rgba(0,0,0,.85) 100%);}
+.player-top-bar{position:absolute;top:0;left:0;right:0;padding:14px 20px;display:flex;align-items:center;gap:10px;z-index:2;}
+.p-back{font-size:10px;font-weight:700;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:4px;cursor:pointer;}
+.p-ch-info{display:flex;align-items:center;gap:8px;}
+.p-ch-icon{width:30px;height:30px;border-radius:6px;background:rgba(255,185,40,.15);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.p-ch-name{font-size:12px;font-weight:700;}
+.p-prog-name{font-size:10px;color:rgba(255,255,255,.45);}
+.p-spacer{flex:1;}
+.p-quality{background:rgba(91,138,255,.22);border:1px solid rgba(91,138,255,.35);border-radius:6px;padding:3px 9px;font-size:9px;font-weight:800;color:rgba(160,200,255,.90);}
+.p-time{font-size:10px;color:rgba(255,255,255,.40);}
+
+/* Controls overlay */
+.player-controls{position:absolute;bottom:0;left:0;right:0;z-index:2;padding:0 20px 16px;}
+.p-progress{margin-bottom:10px;}
+.p-prog-info{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.30);margin-bottom:4px;}
+.p-bar{height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;}
+.p-bar-fill{height:100%;width:38%;background:rgba(255,255,255,.80);border-radius:2px;}
+.p-btns{display:flex;align-items:center;gap:2px;}
+.p-btn{background:none;border:none;color:rgba(255,255,255,.65);font-size:16px;cursor:pointer;padding:6px 10px;}
+.p-btn.main{font-size:24px;color:#fff;padding:6px 12px;}
+.p-btn-right{margin-left:auto;display:flex;align-items:center;gap:4px;}
+.p-pill{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 10px;font-size:9px;font-weight:700;color:rgba(255,255,255,.55);cursor:pointer;}
+.p-pill.active{background:rgba(75,201,168,.15);border-color:rgba(75,201,168,.35);color:rgba(75,201,168,.90);}
+
+/* Mini EPG during playback */
+.player-mini-epg{
+  background:rgba(0,0,0,.85);
+  border-top:1px solid rgba(255,255,255,.06);
+  padding:8px 20px;
+  display:flex;gap:6px;align-items:stretch;
+  flex-shrink:0;
+}
+.p-epg-label{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.22);writing-mode:vertical-rl;flex-shrink:0;display:flex;align-items:center;}
+.p-epg-slot{flex-shrink:0;min-width:110px;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);cursor:pointer;}
+.p-epg-slot.now{background:rgba(91,138,255,.13);border-color:rgba(91,138,255,.28);}
+.p-epg-slot.selected{background:rgba(91,138,255,.22);border-color:rgba(91,138,255,.50);}
+.p-epg-time{font-size:8px;color:rgba(255,255,255,.28);margin-bottom:2px;}
+.p-epg-slot.now .p-epg-time{color:rgba(91,138,255,.75);}
+.p-epg-title{font-size:10px;font-weight:600;color:rgba(255,255,255,.65);}
+.p-epg-slot.now .p-epg-title{color:#fff;}
+
+/* Channel switcher (slide in) */
+.ch-switcher{
+  position:absolute;right:0;top:0;bottom:0;width:200px;
+  background:rgba(3,2,10,.92);border-left:1px solid rgba(255,255,255,.07);
+  z-index:5;
+  display:flex;flex-direction:column;
+}
+.ch-sw-head{padding:12px;border-bottom:1px solid rgba(255,255,255,.05);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.30);}
+.ch-sw-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-left:2px solid transparent;}
+.ch-sw-item.current{background:rgba(91,138,255,.12);border-left-color:rgba(91,138,255,.70);}
+.ch-sw-icon{width:24px;height:24px;border-radius:5px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.ch-sw-info{flex:1;overflow:hidden;}
+.ch-sw-name{font-size:10px;font-weight:600;color:rgba(255,255,255,.70);}
+.ch-sw-prog{font-size:8px;color:rgba(255,255,255,.28);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ════════════════════════════════════════
+   ÉCRAN 3 — ACCUEIL SIMPLIFIÉ
+   ════════════════════════════════════════ */
+.home-screen{height:600px;display:flex;flex-direction:column;}
+.home-topbar{display:flex;align-items:center;padding:14px 20px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.h-logo{font-size:15px;font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#C8DEFF,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-right:24px;}
+.h-tab{font-size:11px;font-weight:600;padding:9px 14px;color:rgba(255,255,255,.32);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.h-tab.active{color:#fff;border-bottom-color:rgba(91,138,255,.90);}
+.h-spacer{flex:1;}
+.h-actions{display:flex;align-items:center;gap:10px;}
+.h-action{font-size:12px;color:rgba(255,255,255,.28);cursor:pointer;}
+.h-profile{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(91,138,255,.50),rgba(112,33,210,.50));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+
+.home-content{flex:1;padding:16px 20px;overflow:hidden;display:flex;flex-direction:column;gap:16px;}
+
+/* Continuer à regarder */
+.continue-row{}
+.h-row-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.30);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.h-row-title span{color:rgba(255,255,255,.15);}
+.continue-cards{display:flex;gap:8px;}
+.c-card{flex-shrink:0;width:140px;border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.06);}
+.c-card-art{height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative;}
+.c-card-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,.40);}
+.c-card-progress-fill{height:100%;background:rgba(91,138,255,.90);}
+.c-card-info{padding:7px 9px;background:rgba(255,255,255,.03);}
+.c-card-title{font-size:10px;font-weight:600;color:rgba(255,255,255,.75);}
+.c-card-sub{font-size:8px;color:rgba(255,255,255,.28);margin-top:2px;}
+
+/* Chaînes favorites */
+.fav-cards{display:flex;gap:6px;}
+.fav-ch{flex-shrink:0;border-radius:12px;overflow:hidden;width:90px;cursor:pointer;border:1px solid rgba(255,255,255,.06);}
+.fav-ch-art{height:56px;display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;}
+.fav-ch-live{position:absolute;bottom:4px;right:4px;background:rgba(255,50,50,.85);color:#fff;font-size:6px;font-weight:800;padding:1px 5px;border-radius:3px;}
+.fav-ch-info{padding:5px 7px;background:rgba(255,255,255,.03);}
+.fav-ch-name{font-size:9px;font-weight:700;color:rgba(255,255,255,.75);}
+.fav-ch-prog{font-size:8px;color:rgba(255,255,255,.28);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+
+/* Catégories rapides */
+.cat-cards{display:flex;gap:8px;}
+.cat-card{flex:1;border-radius:10px;padding:12px;cursor:pointer;border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:4px;}
+.cat-icon{font-size:18px;margin-bottom:2px;}
+.cat-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.80);}
+.cat-count{font-size:9px;color:rgba(255,255,255,.28);}
+
+/* ════════════════════════════════════════
+   LEGEND GRID
+   ════════════════════════════════════════ */
+.legend{max-width:1000px;margin:16px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.leg{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:12px 14px;}
+.leg-title{font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
+.leg-item{font-size:9px;color:rgba(255,255,255,.35);padding:2px 0;display:flex;align-items:flex-start;gap:5px;line-height:1.5;}
+.leg-item::before{content:"·";font-size:12px;line-height:1;flex-shrink:0;}
+.c-b{color:rgba(130,180,255,.75);}
+.c-t{color:rgba(75,201,168,.75);}
+.c-a{color:rgba(255,200,70,.75);}
+</style>
+</head>
+<body>
+
+<p class="page-title">LUMIO — Inspiration TiviMate</p>
+<p class="page-sub">L'EPG au centre de tout · Regarder et naviguer en même temps</p>
+<p class="page-inspo">✦ Basé sur les patterns de TiviMate · 5M+ utilisateurs · référence IPTV mondiale</p>
+
+<div class="views">
+  <div class="vbtn active" onclick="show('epg',this)">📺 Live TV + EPG</div>
+  <div class="vbtn" onclick="show('player',this)">▶ Lecteur</div>
+  <div class="vbtn" onclick="show('home',this)">🏠 Accueil</div>
+</div>
+
+<!-- ═══════════════════════════════
+     ÉCRAN 1 — EPG
+     ═══════════════════════════════ -->
+<div class="view active" id="v-epg">
+<div class="tv">
+<div class="epg-screen">
+
+  <!-- Sidebar icônes -->
+  <div class="sidebar">
+    <div class="s-logo">L</div>
+    <div class="s-item active" title="Live TV">📺</div>
+    <div class="s-item" title="Films">🎬</div>
+    <div class="s-item" title="Séries">📽</div>
+    <div class="s-item" title="Replay">⏪</div>
+    <div class="s-item" title="Favoris">⭐</div>
+    <div class="s-spacer"></div>
+    <div class="s-item settings" title="Réglages">⚙️</div>
+  </div>
+
+  <!-- Liste chaînes -->
+  <div class="ch-panel">
+    <div class="ch-panel-head">
+      <div class="ch-search">⌕ Chercher…</div>
+      <div class="ch-filter">Groupe ▾</div>
+    </div>
+
+    <div class="ch-group-label">Français</div>
+    <div class="ch-item focused">
+      <div class="ch-num">1</div>
+      <div class="ch-logo-box" style="background:rgba(255,185,40,.12)">📺</div>
+      <div class="ch-txt"><div class="ch-name">TF1</div><div class="ch-prog-now">Journal 20h</div></div>
+      <div class="ch-fav">★</div>
+      <div class="ch-live-badge"></div>
+    </div>
+    <div class="ch-item">
+      <div class="ch-num">2</div>
+      <div class="ch-logo-box" style="background:rgba(91,138,255,.10)">🎙</div>
+      <div class="ch-txt"><div class="ch-name">France 2</div><div class="ch-prog-now">Envoyé Spécial</div></div>
+      <div class="ch-fav">★</div>
+      <div class="ch-live-badge"></div>
+    </div>
+    <div class="ch-item">
+      <div class="ch-num">3</div>
+      <div class="ch-logo-box" style="background:rgba(75,201,168,.10)">🌿</div>
+      <div class="ch-txt"><div class="ch-name">France 3</div><div class="ch-prog-now">19/20</div></div>
+      <div class="ch-live-badge"></div>
+    </div>
+    <div class="ch-item">
+      <div class="ch-num">4</div>
+      <div class="ch-logo-box" style="background:rgba(160,100,255,.12)">🎭</div>
+      <div class="ch-txt"><div class="ch-name">Canal+</div><div class="ch-prog-now">The Last of Us</div></div>
+      <div class="ch-fav">★</div>
+      <div class="ch-live-badge"></div>
+    </div>
+    <div class="ch-item">
+      <div class="ch-num">5</div>
+      <div class="ch-logo-box" style="background:rgba(75,201,168,.08)">🌍</div>
+      <div class="ch-txt"><div class="ch-name">France 5</div><div class="ch-prog-now">C dans l'air</div></div>
+      <div class="ch-live-badge"></div>
+    </div>
+    <div class="ch-group-label">Sport</div>
+    <div class="ch-item">
+      <div class="ch-num">20</div>
+      <div class="ch-logo-box" style="background:rgba(255,80,80,.10)">⚽</div>
+      <div class="ch-txt"><div class="ch-name">beIN 1</div><div class="ch-prog-now">Lyon vs PSG</div></div>
+      <div class="ch-fav">★</div>
+      <div class="ch-live-badge"></div>
+    </div>
+    <div class="ch-item">
+      <div class="ch-num">21</div>
+      <div class="ch-logo-box" style="background:rgba(255,80,80,.08)">🏆</div>
+      <div class="ch-txt"><div class="ch-name">beIN 2</div><div class="ch-prog-now">NBA Playoffs</div></div>
+      <div class="ch-live-badge"></div>
+    </div>
+    <div class="ch-item">
+      <div class="ch-num">22</div>
+      <div class="ch-logo-box" style="background:rgba(255,185,40,.08)">🎾</div>
+      <div class="ch-txt"><div class="ch-name">Canal+Sport</div><div class="ch-prog-now">Tennis WTA</div></div>
+      <div class="ch-live-badge"></div>
+    </div>
+  </div>
+
+  <!-- EPG Panel -->
+  <div class="epg-panel">
+
+    <!-- Mini player -->
+    <div class="mini-player">
+      <div class="mini-video">
+        📺
+        <div class="mini-live-badge"><div class="mini-live-dot"></div>LIVE</div>
+        <div class="mini-quality">4K HDR</div>
+      </div>
+      <div class="mini-bar">
+        <div class="mini-ch-name">TF1</div>
+        <div class="mini-prog">Journal de 20h</div>
+        <div class="mini-expand">⤢</div>
+      </div>
+    </div>
+
+    <!-- Time header -->
+    <div class="epg-time-header">
+      <div class="epg-now-line-label">NOW</div>
+      <div class="epg-time-slots">
+        <div class="time-slot">19:00</div>
+        <div class="time-slot">19:30</div>
+        <div class="time-slot now-slot">20:17 ▼</div>
+        <div class="time-slot">21:00</div>
+        <div class="time-slot">21:30</div>
+        <div class="time-slot">22:00</div>
+      </div>
+    </div>
+
+    <!-- Now line -->
+    <div class="now-line" style="left:calc(56px + 200px + 32px + 38%)"></div>
+
+    <!-- EPG Rows -->
+    <div class="epg-rows">
+
+      <!-- TF1 -->
+      <div class="epg-row">
+        <div class="epg-row-ch">📺</div>
+        <div class="epg-row-programs">
+          <div class="epg-prog past" style="flex:1.2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Le 19.45</div><div class="epg-prog-time">19:45</div></div>
+          </div>
+          <div class="epg-prog current focused" style="flex:2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Journal de 20 Heures</div><div class="epg-prog-time">20:00 – 20:45</div></div>
+            <div class="epg-prog-progress" style="width:38%"></div>
+          </div>
+          <div class="epg-prog future" style="flex:2.5">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Koh-Lanta S14</div><div class="epg-prog-time">20:45</div></div>
+          </div>
+          <div class="epg-prog future" style="flex:2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Sept à Huit</div><div class="epg-prog-time">22:45</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- France 2 -->
+      <div class="epg-row">
+        <div class="epg-row-ch">🎙</div>
+        <div class="epg-row-programs">
+          <div class="epg-prog past" style="flex:1">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Télématin</div><div class="epg-prog-time">19:30</div></div>
+          </div>
+          <div class="epg-prog current" style="flex:2.5">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Envoyé Spécial</div><div class="epg-prog-time">19:55 – 21:30</div></div>
+            <div class="epg-prog-progress" style="width:22%"></div>
+          </div>
+          <div class="epg-prog future" style="flex:2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Le Cercle</div><div class="epg-prog-time">21:30</div></div>
+          </div>
+          <div class="epg-prog future" style="flex:2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Infrarouge</div><div class="epg-prog-time">22:35</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canal+ -->
+      <div class="epg-row">
+        <div class="epg-row-ch">🎭</div>
+        <div class="epg-row-programs">
+          <div class="epg-prog past" style="flex:2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Le Grand Journal</div><div class="epg-prog-time">19:00</div></div>
+          </div>
+          <div class="epg-prog current" style="flex:1.5">
+            <div class="epg-prog-inner"><div class="epg-prog-title">The Last of Us S2</div><div class="epg-prog-time">20:10 – 21:05</div></div>
+            <div class="epg-prog-progress" style="width:15%"></div>
+          </div>
+          <div class="epg-prog future" style="flex:3">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Succession S4</div><div class="epg-prog-time">21:05</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- beIN -->
+      <div class="epg-row">
+        <div class="epg-row-ch">⚽</div>
+        <div class="epg-row-programs">
+          <div class="epg-prog past" style="flex:1">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Avant-match</div><div class="epg-prog-time">19:30</div></div>
+          </div>
+          <div class="epg-prog current" style="flex:4">
+            <div class="epg-prog-inner"><div class="epg-prog-title">🔴 LIVE · Olympique Lyon vs Paris SG · Ligue 1</div><div class="epg-prog-time">20:00 – 22:00</div></div>
+            <div class="epg-prog-progress" style="width:18%"></div>
+          </div>
+          <div class="epg-prog future" style="flex:2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">After Foot</div><div class="epg-prog-time">22:00</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arte -->
+      <div class="epg-row">
+        <div class="epg-row-ch">🌍</div>
+        <div class="epg-row-programs">
+          <div class="epg-prog past" style="flex:1.5">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Karambolage</div><div class="epg-prog-time">19:45</div></div>
+          </div>
+          <div class="epg-prog current" style="flex:2">
+            <div class="epg-prog-inner"><div class="epg-prog-title">28 Minutes</div><div class="epg-prog-time">20:05 – 21:00</div></div>
+            <div class="epg-prog-progress" style="width:22%"></div>
+          </div>
+          <div class="epg-prog future" style="flex:4">
+            <div class="epg-prog-inner"><div class="epg-prog-title">Docu : L'IA et nous — Demain</div><div class="epg-prog-time">21:00</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Info strip -->
+    <div class="epg-info-strip">
+      <div class="epg-info-thumb">📺</div>
+      <div class="epg-info-main">
+        <div class="epg-info-ch">TF1 · Chaîne 1 · HD</div>
+        <div class="epg-info-title">Journal de 20 Heures</div>
+        <div class="epg-info-meta">20:00 – 20:45 · Information · Présenté par Anne-Claire Coudray</div>
+      </div>
+      <div class="epg-info-actions">
+        <button class="epg-btn epg-btn-play">▶ Regarder</button>
+        <button class="epg-btn epg-btn-catchup">⏪ Replay</button>
+        <button class="epg-btn epg-btn-reminder">🔔 Rappel</button>
+        <button class="epg-btn epg-btn-more">••• Plus</button>
+      </div>
+      <div class="epg-progress-wrap">
+        <div class="epg-prog-pct-label"><span>20:00</span><span>– 28 min</span></div>
+        <div class="epg-prog-bar"><div class="epg-prog-bar-fill"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="legend">
+  <div class="leg">
+    <div class="leg-title c-b">L'écran EPG — cœur de LUMIO</div>
+    <div class="leg-item">Sidebar icônes : changement de section en 1 clic</div>
+    <div class="leg-item">Liste chaînes à gauche + programme en cours</div>
+    <div class="leg-item">Grille EPG horizontale : passé → maintenant → futur</div>
+    <div class="leg-item">Mini player toujours visible en haut à droite</div>
+    <div class="leg-item">Bande info en bas : détails + actions du programme</div>
+  </div>
+  <div class="leg">
+    <div class="leg-title c-t">Héritage TiviMate</div>
+    <div class="leg-item">EPG grille horizontale = référence mondiale</div>
+    <div class="leg-item">Couleurs : passé grisé / maintenant bleu / futur normal</div>
+    <div class="leg-item">Barre de progression dans la case "en cours"</div>
+    <div class="leg-item">Catch-up accessible directement depuis l'EPG</div>
+    <div class="leg-item">Rappel programme = feature premium demandée</div>
+  </div>
+  <div class="leg">
+    <div class="leg-title c-a">Adaptations tvOS</div>
+    <div class="leg-item">Focus engine : navigation directionnelle Siri Remote</div>
+    <div class="leg-item">Mini player (vs plein écran Android) = natif tvOS</div>
+    <div class="leg-item">Sidebar icônes (vs texte) = optimisé grande distance</div>
+    <div class="leg-item">Design dark LUMIO cohérent avec l'écran de login</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════
+     ÉCRAN 2 — PLAYER
+     ═══════════════════════════════ -->
+<div class="view" id="v-player">
+<div class="tv">
+<div class="player-screen">
+  <div class="player-video">
+    📺
+    <div class="player-grad"></div>
+    <!-- Top bar -->
+    <div class="player-top-bar">
+      <div class="p-back">‹ EPG</div>
+      <div class="p-ch-info">
+        <div class="p-ch-icon">📺</div>
+        <div><div class="p-ch-name">TF1</div><div class="p-prog-name">Journal de 20h</div></div>
+      </div>
+      <div class="p-spacer"></div>
+      <div class="p-quality">4K HDR</div>
+      <div class="p-time">20:17</div>
+    </div>
+    <!-- Controls -->
+    <div class="player-controls">
+      <div class="p-progress">
+        <div class="p-prog-info"><span>Journal de 20h · 20:00 – 20:45</span><span>Suivant : Koh-Lanta à 20:45</span></div>
+        <div class="p-bar"><div class="p-bar-fill"></div></div>
+      </div>
+      <div class="p-btns">
+        <button class="p-btn">⏮</button>
+        <button class="p-btn">⏪</button>
+        <button class="p-btn main">⏸</button>
+        <button class="p-btn">⏩</button>
+        <button class="p-btn">⏭</button>
+        <div class="p-btn-right">
+          <div class="p-pill active">VF</div>
+          <div class="p-pill">ST FR</div>
+          <div class="p-pill">⊞ Multi</div>
+          <div class="p-pill">★</div>
+          <div class="p-pill">EPG</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mini EPG strip -->
+  <div class="player-mini-epg">
+    <div class="p-epg-label">EPG</div>
+    <div class="p-epg-slot"><div class="p-epg-time">19:45</div><div class="p-epg-title">Le 19.45</div></div>
+    <div class="p-epg-slot now"><div class="p-epg-time">▶ 20:00</div><div class="p-epg-title">Journal 20h</div></div>
+    <div class="p-epg-slot selected"><div class="p-epg-time">20:45</div><div class="p-epg-title">Koh-Lanta S14</div></div>
+    <div class="p-epg-slot"><div class="p-epg-time">22:45</div><div class="p-epg-title">Sept à Huit</div></div>
+    <div class="p-epg-slot"><div class="p-epg-time">00:15</div><div class="p-epg-title">Late Night</div></div>
+  </div>
+
+  <!-- Channel switcher -->
+  <div class="ch-switcher">
+    <div class="ch-sw-head">Changer de chaîne</div>
+    <div class="ch-sw-item current">
+      <div class="ch-sw-icon">📺</div>
+      <div class="ch-sw-info"><div class="ch-sw-name">TF1</div><div class="ch-sw-prog">Journal 20h</div></div>
+    </div>
+    <div class="ch-sw-item">
+      <div class="ch-sw-icon">🎙</div>
+      <div class="ch-sw-info"><div class="ch-sw-name">France 2</div><div class="ch-sw-prog">Envoyé Spécial</div></div>
+    </div>
+    <div class="ch-sw-item">
+      <div class="ch-sw-icon">🎭</div>
+      <div class="ch-sw-info"><div class="ch-sw-name">Canal+</div><div class="ch-sw-prog">The Last of Us</div></div>
+    </div>
+    <div class="ch-sw-item">
+      <div class="ch-sw-icon">⚽</div>
+      <div class="ch-sw-info"><div class="ch-sw-name">beIN Sports 1</div><div class="ch-sw-prog">Lyon vs PSG 🔴</div></div>
+    </div>
+    <div class="ch-sw-item">
+      <div class="ch-sw-icon">🌍</div>
+      <div class="ch-sw-info"><div class="ch-sw-name">Arte</div><div class="ch-sw-prog">28 Minutes</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="legend">
+  <div class="leg">
+    <div class="leg-title c-b">Lecteur plein écran</div>
+    <div class="leg-item">Swipe haut Siri Remote → affiche les contrôles</div>
+    <div class="leg-item">Swipe gauche/droite → chaîne précédente/suivante</div>
+    <div class="leg-item">Mini EPG strip en bas : programme en cours + suivants</div>
+    <div class="leg-item">Channel switcher : slide depuis la droite (bouton Menu)</div>
+  </div>
+  <div class="leg">
+    <div class="leg-title c-t">Contrôles rapides</div>
+    <div class="leg-item">VF/VO accessible en 1 clic depuis le lecteur</div>
+    <div class="leg-item">Sous-titres : FR, EN, désactivé</div>
+    <div class="leg-item">Multiview (2 chaînes côte à côte) pour le sport</div>
+    <div class="leg-item">★ Favori ajouté/retiré sans quitter la lecture</div>
+  </div>
+  <div class="leg">
+    <div class="leg-title c-a">Expérience TiviMate</div>
+    <div class="leg-item">Programme suivant toujours visible → zéro surprise</div>
+    <div class="leg-item">Changement de chaîne sans quitter le plein écran</div>
+    <div class="leg-item">Contrôles auto-masqués après 4 secondes</div>
+    <div class="leg-item">Reprise automatique à la dernière chaîne au démarrage</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════
+     ÉCRAN 3 — ACCUEIL
+     ═══════════════════════════════ -->
+<div class="view" id="v-home">
+<div class="tv">
+<div class="home-screen">
+  <div class="home-topbar">
+    <div class="h-logo">LUMIO</div>
+    <div class="h-tab active">Accueil</div>
+    <div class="h-tab">Live TV</div>
+    <div class="h-tab">Films</div>
+    <div class="h-tab">Séries</div>
+    <div class="h-tab">Replay</div>
+    <div class="h-spacer"></div>
+    <div class="h-actions">
+      <div class="h-action">⌕</div>
+      <div class="h-action">🔔</div>
+      <div class="h-profile">M</div>
+    </div>
+  </div>
+
+  <div class="home-content">
+
+    <!-- Continuer -->
+    <div class="continue-row">
+      <div class="h-row-title c-b">⏱ Continuer à regarder <span>· 3 éléments</span></div>
+      <div class="continue-cards">
+        <div class="c-card" style="background:rgba(91,138,255,.06)">
+          <div class="c-card-art" style="background:rgba(91,138,255,.12)">🎭
+            <div class="c-card-progress"><div class="c-card-progress-fill" style="width:62%"></div></div>
+          </div>
+          <div class="c-card-info"><div class="c-card-title">The Last of Us</div><div class="c-card-sub">S2E3 · 62%</div></div>
+        </div>
+        <div class="c-card" style="background:rgba(255,80,80,.05)">
+          <div class="c-card-art" style="background:rgba(255,80,80,.10)">⚽
+            <div class="c-card-progress"><div class="c-card-progress-fill" style="width:28%"></div></div>
+          </div>
+          <div class="c-card-info"><div class="c-card-title">Lyon vs PSG</div><div class="c-card-sub">32' · En cours</div></div>
+        </div>
+        <div class="c-card" style="background:rgba(160,100,255,.05)">
+          <div class="c-card-art" style="background:rgba(160,100,255,.10)">🚀
+            <div class="c-card-progress"><div class="c-card-progress-fill" style="width:45%"></div></div>
+          </div>
+          <div class="c-card-info"><div class="c-card-title">Dune : Partie 2</div><div class="c-card-sub">Film · 45%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favoris -->
+    <div>
+      <div class="h-row-title c-a">⭐ Mes chaînes <span>· 8 favoris</span></div>
+      <div class="fav-cards">
+        <div class="fav-ch" style="background:rgba(255,185,40,.05)"><div class="fav-ch-art" style="background:rgba(255,185,40,.10)">📺<div class="fav-ch-live">LIVE</div></div><div class="fav-ch-info"><div class="fav-ch-name">TF1</div><div class="fav-ch-prog">Journal 20h</div></div></div>
+        <div class="fav-ch" style="background:rgba(255,80,80,.05)"><div class="fav-ch-art" style="background:rgba(255,80,80,.10)">⚽<div class="fav-ch-live">LIVE</div></div><div class="fav-ch-info"><div class="fav-ch-name">beIN 1</div><div class="fav-ch-prog">Lyon vs PSG</div></div></div>
+        <div class="fav-ch" style="background:rgba(160,100,255,.05)"><div class="fav-ch-art" style="background:rgba(160,100,255,.10)">🎭<div class="fav-ch-live">LIVE</div></div><div class="fav-ch-info"><div class="fav-ch-name">Canal+</div><div class="fav-ch-prog">The Last of Us</div></div></div>
+        <div class="fav-ch" style="background:rgba(75,201,168,.05)"><div class="fav-ch-art" style="background:rgba(75,201,168,.10)">🌍<div class="fav-ch-live">LIVE</div></div><div class="fav-ch-info"><div class="fav-ch-name">Arte</div><div class="fav-ch-prog">28 Minutes</div></div></div>
+        <div class="fav-ch" style="background:rgba(91,138,255,.05)"><div class="fav-ch-art" style="background:rgba(91,138,255,.10)">📰<div class="fav-ch-live">LIVE</div></div><div class="fav-ch-info"><div class="fav-ch-name">BFM TV</div><div class="fav-ch-prog">Édition spéciale</div></div></div>
+      </div>
+    </div>
+
+    <!-- Catégories -->
+    <div>
+      <div class="h-row-title c-t">📂 Catégories</div>
+      <div class="cat-cards">
+        <div class="cat-card" style="background:rgba(255,80,80,.07);border-color:rgba(255,80,80,.14)"><div class="cat-icon">📡</div><div class="cat-title">Live TV</div><div class="cat-count">1 247 chaînes</div></div>
+        <div class="cat-card" style="background:rgba(91,138,255,.06);border-color:rgba(91,138,255,.12)"><div class="cat-icon">🎬</div><div class="cat-title">Films</div><div class="cat-count">8 430 titres</div></div>
+        <div class="cat-card" style="background:rgba(160,100,255,.06);border-color:rgba(160,100,255,.12)"><div class="cat-icon">📽</div><div class="cat-title">Séries</div><div class="cat-count">2 180 séries</div></div>
+        <div class="cat-card" style="background:rgba(75,201,168,.06);border-color:rgba(75,201,168,.12)"><div class="cat-icon">⏪</div><div class="cat-title">Replay</div><div class="cat-count">7 derniers jours</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="legend">
+  <div class="leg">
+    <div class="leg-title c-b">Accueil minimal</div>
+    <div class="leg-item">L'accueil est simple — l'EPG est l'écran principal</div>
+    <div class="leg-item">"Continuer à regarder" = reprise de lecture instantanée</div>
+    <div class="leg-item">Favoris avec programme en cours visible</div>
+    <div class="leg-item">4 catégories pour la navigation VOD</div>
+  </div>
+  <div class="leg">
+    <div class="leg-title c-t">Pattern TiviMate</div>
+    <div class="leg-item">Démarrage sur la dernière chaîne regardée</div>
+    <div class="leg-item">Favoris = liste personnalisée en accès rapide</div>
+    <div class="leg-item">Groupes de chaînes = navigation par catégories</div>
+    <div class="leg-item">Reprise automatique = différenciateur fort</div>
+  </div>
+  <div class="leg">
+    <div class="leg-title c-a">Ce que LUMIO apporte en plus</div>
+    <div class="leg-item">Design natif tvOS (TiviMate = Android TV)</div>
+    <div class="leg-item">Identité visuelle forte vs UI générique</div>
+    <div class="leg-item">Login QR Code iPhone = aucun concurrent ne l'a</div>
+    <div class="leg-item">Animations Siri Remote natives et fluides</div>
+  </div>
+</div>
+</div>
+
+<script>
+function show(id, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.vbtn').forEach(b => b.classList.remove('active'));
+  document.getElementById('v-' + id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
