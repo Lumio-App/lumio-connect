@@ -1,22 +1,19 @@
-// session-status.mjs  — Netlify Function v1
-// GET /api/session-status/:token  (token extrait du path)
-// Polling Apple TV — retourne pending | completed + credentials.
+// session-status.js — Netlify Function
+// GET /api/session-status/:token
 
-import { getStore } from "@netlify/blobs";
+const { getStore } = require("@netlify/blobs");
 
 const CORS = {
     "Access-Control-Allow-Origin": "*",
     "Content-Type":                "application/json",
 };
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
     if (event.httpMethod === "OPTIONS") {
         return { statusCode: 204, headers: CORS, body: "" };
     }
 
-    // Token = dernier segment du path (ex: /api/session-status/AX7K2M)
     const token = event.path.split("/").filter(Boolean).pop();
-
     if (!token) {
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "missing_token" }) };
     }
@@ -39,7 +36,6 @@ export const handler = async (event) => {
         return { statusCode: 200, headers: CORS, body: JSON.stringify({ status: "pending" }) };
     }
 
-    // Completed — on envoie les credentials et on supprime la session
     if (session.status === "completed") {
         await store.delete(token);
         return {

@@ -1,8 +1,7 @@
-// session-submit.mjs  — Netlify Function v1
+// session-submit.js — Netlify Function
 // POST /api/session-submit/:token
-// Reçoit les credentials depuis la page iPhone.
 
-import { getStore } from "@netlify/blobs";
+const { getStore } = require("@netlify/blobs");
 
 const CORS = {
     "Access-Control-Allow-Origin":  "*",
@@ -10,7 +9,7 @@ const CORS = {
     "Content-Type":                 "application/json",
 };
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
     if (event.httpMethod === "OPTIONS") {
         return { statusCode: 204, headers: CORS, body: "" };
     }

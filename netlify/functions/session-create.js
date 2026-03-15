@@ -1,8 +1,7 @@
-// session-create.mjs  — Netlify Function v1
+// session-create.js — Netlify Function
 // POST /api/session-create
-// Crée une session QR Code avec token unique 6 chars (TTL 10 min).
 
-import { getStore } from "@netlify/blobs";
+const { getStore } = require("@netlify/blobs");
 
 const CORS = {
     "Access-Control-Allow-Origin":  "*",
@@ -17,7 +16,7 @@ function generateToken() {
     ).join("");
 }
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
     if (event.httpMethod === "OPTIONS") {
         return { statusCode: 204, headers: CORS, body: "" };
     }
@@ -39,12 +38,7 @@ export const handler = async (event) => {
         return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: "token_generation_failed" }) };
     }
 
-    const session = {
-        status:     "pending",
-        created_at: Date.now(),
-        expires_at: Date.now() + TTL,
-    };
-
+    const session = { status: "pending", created_at: Date.now(), expires_at: Date.now() + TTL };
     await store.set(token, JSON.stringify(session));
 
     return {
